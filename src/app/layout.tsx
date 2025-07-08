@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: "Edu-plus",
   description: "",
     icons: {
-    icon: "",
+    icon: "/public/image/logo.png",
   },
 };
 
