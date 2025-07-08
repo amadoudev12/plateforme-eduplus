@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Edu-plus",
   description: "",
+    icons: {
+    icon: "",
+  },
 };
 
 export default function RootLayout({
