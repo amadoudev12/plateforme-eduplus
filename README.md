@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EduPlus
 
-## Getting Started
+Plateforme éducative pour trouver, consulter et déposer gratuitement des sujets (devoirs, exercices, examens...).
 
-First, run the development server:
+- **Frontend** : Next.js + Tailwind (dossier `src/`)
+- **Backend** : Express + Prisma (dossier `backend/`)
+- **Base de données** : PostgreSQL
+
+## Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Frontend (à la racine du projet)
+npm install
+
+# Backend
+cd backend
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copier `backend/.env.example` en `backend/.env`, puis remplir le mot de passe PostgreSQL dans `DATABASE_URL` et choisir une longue valeur aléatoire pour `JWT_SECRET`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Créer ensuite la base et ses tables :
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+cd backend
+npm run migrer   # crée la base "eduplus" et applique les migrations
+npm run seed     # ajoute des données de développement (facultatif)
+```
 
-## Learn More
+Comptes de test créés par `npm run seed` (développement uniquement) :
 
-To learn more about Next.js, take a look at the following resources:
+| Email | Mot de passe | Rôle |
+|---|---|---|
+| eleve@eduplus.dev | motdepasse123 | élève |
+| admin@eduplus.dev | motdepasse123 | admin |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Lancer le projet
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Il faut deux terminaux :
 
-## Deploy on Vercel
+```bash
+# Terminal 1 : backend sur http://localhost:4000
+cd backend
+npm run dev
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Terminal 2 : frontend sur http://localhost:3000
+npm run dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Organisation du backend
+
+```text
+backend/
+├── prisma/schema.prisma   tables de la base de données
+├── prisma/seed.js         données de développement
+├── routes/                adresses de l'API
+├── controllers/           ce que fait chaque route
+├── middlewares/           vérification de la connexion, réception des fichiers
+├── fichiers/              fichiers déposés par les utilisateurs (non versionnés)
+└── server.js              point d'entrée
+```
+
+## Routes de l'API
+
+| Méthode | Adresse | Rôle | Connexion requise |
+|---|---|---|---|
+| POST | `/api/auth/inscription` | Créer un compte | non |
+| POST | `/api/auth/connexion` | Se connecter | non |
+| POST | `/api/auth/deconnexion` | Se déconnecter | non |
+| GET | `/api/auth/moi` | Utilisateur connecté (ou `null`) | non |
+| GET | `/api/sujets` | Liste des sujets, filtres `recherche`, `matiere`, `niveau`, `type`, `annee` | non |
+| GET | `/api/sujets/mes-sujets` | Sujets de l'utilisateur connecté | oui |
+| GET | `/api/sujets/:id/fichier` | Afficher le fichier d'un sujet | non |
+| GET | `/api/sujets/:id/telecharger` | Télécharger le fichier d'un sujet | non |
+| POST | `/api/sujets` | Déposer un sujet (avec fichier) | oui |
+| DELETE | `/api/sujets/:id` | Supprimer un sujet (auteur ou admin) | oui |

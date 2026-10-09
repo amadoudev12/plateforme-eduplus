@@ -1,5 +1,6 @@
 
 import Image from 'next/image'
+import Link from 'next/link'
 import imgGraduation2 from '../../public/image/Copie de graduation.png'
 export default function HomePage(){
     return (
@@ -19,12 +20,12 @@ export default function HomePage(){
             La plateforme éducative moderne pour tous les niveaux scolaires.
         </p>
 
-        <a
-            href="#"
+        <Link
+            href="/cours"
             className="inline-block bg-white text-blue-700 font-semibold text-lg px-6 py-3 rounded-xl shadow-md hover:bg-blue-600 hover:text-white transition-all duration-300"
         >
-            📚 Voir les fiches
-        </a>
+            📚 Voir les sujets
+        </Link>
         </div>
 
         {/* Image */}

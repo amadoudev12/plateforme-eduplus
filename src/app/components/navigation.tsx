@@ -3,18 +3,22 @@
 import Link from "next/link"
 import { useState } from "react"
 import { FiMenu } from "react-icons/fi"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useUtilisateur } from "./utilisateurContext"
+import { appelApi } from "../lib/api"
 
 const linksNames = [
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
-    { name: "Cours", href: "/cours" },
+    { name: "Sujets", href: "/cours" },
     { name: "Contact", href: "/contact" },
     { name: "Depot", href: "/depot" },
     ]
 
 export default function Navigation() {
     const [showMenu, setShowMenu] = useState(false)
+    const { utilisateur, chargement, setUtilisateur } = useUtilisateur()
+    const router = useRouter()
 
     const toggleMenu = () => {
         setShowMenu(!showMenu)
@@ -22,20 +26,27 @@ export default function Navigation() {
 
     const pathname = usePathname()
 
+    const seDeconnecter = async () => {
+        // Même si le serveur ne répond pas, on efface l'utilisateur côté navigateur
+        await appelApi("/auth/deconnexion", { method: "POST" }).catch(() => {})
+        setUtilisateur(null)
+        setShowMenu(false)
+        router.push("/")
+    }
+
     return (
         <nav className="w-full px-6 md:px-12 py-4 bg-white shadow-md sticky top-0 z-50">
         {/* Partie principale : logo + desktop + bouton burger */}
         <div className="flex justify-between items-center w-full">
             {/* Logo */}
-            <h1 className="text-2xl md:text-3xl text-blue-700 font-extrabold tracking-wide">
+            <Link href="/" className="text-2xl md:text-3xl text-blue-700 font-extrabold tracking-wide">
             EduPlus
-            </h1>
+            </Link>
 
             {/* Liens desktop */}
             <ul className="hidden md:flex items-center gap-4">
                 {linksNames.map((link) => {
                 const isActive = pathname === link.href
-                console.log(pathname +"|"+isActive)
                 return (
                     <Link
                     key={link.name}
@@ -50,23 +61,40 @@ export default function Navigation() {
 
             </ul>
 
-            {/* Bouton d'inscription */}
-            <div className="hidden md:flex">
-            <Link
-                className="bg-blue-700 px-5 py-2 rounded-2xl text-white font-semibold hover:bg-blue-800 transition"
-                href="/register"
-            >
-                S'inscrire
-            </Link>
+            {/* Compte : profil + déconnexion, ou connexion + inscription */}
+            <div className="hidden md:flex items-center gap-3 min-w-40 justify-end">
+            {!chargement && utilisateur && (
+                <>
+                <Link className="text-blue-700 font-semibold hover:underline" href="/profil">
+                    {utilisateur.prenom}
+                </Link>
+                <button
+                    onClick={seDeconnecter}
+                    className="border border-blue-700 px-4 py-2 rounded-2xl text-blue-700 font-semibold hover:bg-blue-100 transition cursor-pointer"
+                >
+                    Déconnexion
+                </button>
+                </>
+            )}
+            {!chargement && !utilisateur && (
+                <>
+                <Link className="text-blue-700 font-semibold hover:underline" href="/connexion">
+                    Connexion
+                </Link>
+                <Link
+                    className="bg-blue-700 px-5 py-2 rounded-2xl text-white font-semibold hover:bg-blue-800 transition"
+                    href="/inscription"
+                >
+                    S'inscrire
+                </Link>
+                </>
+            )}
             </div>
 
             {/* Menu burger mobile */}
-            <div className="md:hidden">
-            <FiMenu
-                className="text-3xl text-blue-700 cursor-pointer"
-                onClick={toggleMenu}
-            />
-            </div>
+            <button className="md:hidden" onClick={toggleMenu} aria-label="Ouvrir le menu">
+            <FiMenu className="text-3xl text-blue-700 cursor-pointer" />
+            </button>
         </div>
 
         {/* Menu Mobile */}
@@ -83,12 +111,40 @@ export default function Navigation() {
                     {link.name}
                 </Link>
                 ))}
-                <Link
-                href="/register"
-                className="mt-3 bg-blue-700 text-white px-6 py-2 rounded-full hover:bg-blue-800 transition"
-                >
-                S'inscrire
-                </Link>
+                {utilisateur ? (
+                <>
+                    <Link
+                    onClick={toggleMenu}
+                    href="/profil"
+                    className="block text-blue-700 font-medium text-base px-4 py-2 w-full text-center hover:bg-blue-100 transition-all duration-200"
+                    >
+                    Mon profil ({utilisateur.prenom})
+                    </Link>
+                    <button
+                    onClick={seDeconnecter}
+                    className="mt-3 border border-blue-700 text-blue-700 px-6 py-2 rounded-full hover:bg-blue-100 transition"
+                    >
+                    Déconnexion
+                    </button>
+                </>
+                ) : (
+                <>
+                    <Link
+                    onClick={toggleMenu}
+                    href="/connexion"
+                    className="block text-blue-700 font-medium text-base px-4 py-2 w-full text-center hover:bg-blue-100 transition-all duration-200"
+                    >
+                    Connexion
+                    </Link>
+                    <Link
+                    onClick={toggleMenu}
+                    href="/inscription"
+                    className="mt-3 bg-blue-700 text-white px-6 py-2 rounded-full hover:bg-blue-800 transition"
+                    >
+                    S'inscrire
+                    </Link>
+                </>
+                )}
             </ul>
             </div>
         )}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Navigation from "../app/components/navigation"
 import Footer from "../app/components/footer"
+import { UtilisateurProvider } from "../app/components/utilisateurContext"
 import "./styles/globals.css";
 
 const geistSans = Geist({
@@ -16,9 +17,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Edu-plus",
-  description: "",
+  description: "La plateforme éducative pour trouver, déposer et télécharger gratuitement des sujets.",
     icons: {
-    icon: "/public/image/logo.png",
+    icon: "/image/logo.png",
   },
 };
 
@@ -28,13 +29,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navigation/>
-        {children}
-        <Footer/>
+        <UtilisateurProvider>
+          <Navigation/>
+          {children}
+          <Footer/>
+        </UtilisateurProvider>
       </body>
     </html>
   );
