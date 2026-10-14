@@ -1,40 +1,42 @@
 import Link from "next/link"
+import { EMAIL_CONTACT } from "../lib/api"
+
+const styleLienPied = "text-slate-300 transition hover:text-white"
 
 export default function Footer() {
     return (
-        <footer className="bg-blue-900 text-gray-200 py-10 px-6 md:px-20">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-            
+        <footer className="bg-slate-900 text-slate-300">
+        <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[2fr_1fr_1fr]">
             {/* Logo & slogan */}
-            <div className="text-center md:text-left">
-            <h2 className="text-2xl font-bold text-white mb-2">EduPlus</h2>
-            <p className="text-sm max-w-xs">
-                Apprends, Dépose, Télécharge Gratuitement — La plateforme éducative pour tous les niveaux.
-            </p>
+            <div>
+                <p className="text-2xl font-extrabold tracking-tight text-white">EduPlus</p>
+                <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
+                    Les sujets d&apos;examens, de partiels et de TD partagés gratuitement entre étudiants.
+                </p>
             </div>
 
-            {/* Liens utiles */}
-            <div className="flex gap-10">
-            <div>
-                <h3 className="font-semibold mb-3">Liens</h3>
-                <ul className="space-y-1 text-sm">
-                <li><Link href="/" className="hover:text-white transition">Accueil</Link></li>
-                <li><Link href="/about" className="hover:text-white transition">À propos</Link></li>
-                <li><Link href="/cours" className="hover:text-white transition">Sujets</Link></li>
-                <li><Link href="/contact" className="hover:text-white transition">Contact</Link></li>
+            <nav aria-label="Liens du pied de page">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-white">Navigation</h2>
+                <ul className="mt-4 space-y-2 text-sm">
+                    <li><Link href="/cours" className={styleLienPied}>Tous les sujets</Link></li>
+                    <li><Link href="/depot" className={styleLienPied}>Déposer un sujet</Link></li>
+                    <li><Link href="/about" className={styleLienPied}>À propos</Link></li>
+                    <li><Link href="/contact" className={styleLienPied}>Contact</Link></li>
                 </ul>
-            </div>
+            </nav>
+
             <div>
-                <h3 className="font-semibold mb-3">Contact</h3>
-                <ul className="space-y-1 text-sm">
-                <li>Email : <a href="https://mail.google.com/mail/u/0/?pli=1#inbox" className="hover:text-white transition">contact@eduplus.com</a></li>
-                <li>Téléphone : <a href="https://wa.me/qr/M72OP2Y5H5VZD1" className="hover:text-white transition">+225 00 00 00 00</a></li>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-white">Contact</h2>
+                <ul className="mt-4 space-y-2 text-sm">
+                    <li><a href={`mailto:${EMAIL_CONTACT}`} className={styleLienPied}>{EMAIL_CONTACT}</a></li>
+                    <li><a href="https://wa.me/qr/M72OP2Y5H5VZD1" target="_blank" rel="noopener noreferrer" className={styleLienPied}>WhatsApp</a></li>
                 </ul>
-            </div>
             </div>
         </div>
-        <div className="mt-10 text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} EduPlus. Tous droits réservés.
+        <div className="border-t border-slate-800">
+            <p className="mx-auto w-full max-w-6xl px-4 py-5 text-xs text-slate-500 sm:px-6">
+                &copy; {new Date().getFullYear()} EduPlus. Tous droits réservés.
+            </p>
         </div>
         </footer>
     )

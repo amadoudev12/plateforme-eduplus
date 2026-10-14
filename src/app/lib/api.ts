@@ -1,7 +1,12 @@
-// Adresse du backend (modifiable avec NEXT_PUBLIC_API_URL dans un fichier .env.local)
-export const URL_API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"
+// Le backend est appelé à travers le site lui-même : Next transmet « /api/... » au backend (voir next.config.ts)
+export const URL_API = "/api"
 
 export const TYPES_SUJET = ["devoir", "exercice", "examen", "interrogation", "concours", "autre"]
+
+// "examen" devient "Examen" (pour l'affichage)
+export function majuscule(texte: string) {
+    return texte.charAt(0).toUpperCase() + texte.slice(1)
+}
 
 export type UtilisateurType = {
     id: number
@@ -24,7 +29,18 @@ export type SujetType = {
     dateCreation: string
     matiere: string
     niveau: string
+    // Identifiant du fichier en ligne : son extension indique le format (pdf, doc, docx)
+    fichier: string
     utilisateur: { id: number; prenom: string; nom: string }
+}
+
+export const EMAIL_CONTACT = "contact@eduplus.com"
+
+// Page où envoyer l'utilisateur après sa connexion : celle indiquée par « ?suite= » dans l'adresse, sinon les sujets.
+// On n'accepte qu'un chemin du site ("/depot"), jamais une adresse externe.
+export function pageApresConnexion() {
+    const suite = new URLSearchParams(window.location.search).get("suite")
+    return suite && suite.startsWith("/") && !suite.startsWith("//") ? suite : "/cours"
 }
 
 // Appeler le backend. En cas de problème, lance une erreur avec un message à afficher à l'utilisateur

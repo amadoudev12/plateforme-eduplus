@@ -1,153 +1,150 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
-import { FiMenu } from "react-icons/fi"
+import { useEffect, useState } from "react"
+import { FiMenu, FiX, FiLogOut, FiUpload } from "react-icons/fi"
 import { usePathname, useRouter } from "next/navigation"
 import { useUtilisateur } from "./utilisateurContext"
 import { appelApi } from "../lib/api"
 
-const linksNames = [
-    { name: "Home", href: "/" },
-    { name: "About", href: "/about" },
-    { name: "Sujets", href: "/cours" },
-    { name: "Contact", href: "/contact" },
-    { name: "Depot", href: "/depot" },
-    ]
+const liens = [
+    { nom: "Accueil", href: "/" },
+    { nom: "Sujets", href: "/cours" },
+    { nom: "À propos", href: "/about" },
+    { nom: "Contact", href: "/contact" },
+]
 
 export default function Navigation() {
-    const [showMenu, setShowMenu] = useState(false)
+    const [menuOuvert, setMenuOuvert] = useState(false)
     const { utilisateur, chargement, setUtilisateur } = useUtilisateur()
     const router = useRouter()
-
-    const toggleMenu = () => {
-        setShowMenu(!showMenu)
-    }
-
     const pathname = usePathname()
+
+    // Le menu mobile se referme dès qu'on change de page
+    useEffect(() => {
+        setMenuOuvert(false)
+    }, [pathname])
 
     const seDeconnecter = async () => {
         // Même si le serveur ne répond pas, on efface l'utilisateur côté navigateur
         await appelApi("/auth/deconnexion", { method: "POST" }).catch(() => {})
         setUtilisateur(null)
-        setShowMenu(false)
+        setMenuOuvert(false)
         router.push("/")
     }
 
+    const styleLien = (href: string) =>
+        `rounded-lg px-3 py-2 text-sm font-medium transition ${
+            pathname === href ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+        }`
+
+    const initiale = utilisateur?.prenom.charAt(0).toUpperCase()
+
     return (
-        <nav className="w-full px-6 md:px-12 py-4 bg-white shadow-md sticky top-0 z-50">
-        {/* Partie principale : logo + desktop + bouton burger */}
-        <div className="flex justify-between items-center w-full">
+        <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <nav aria-label="Navigation principale" className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
             {/* Logo */}
-            <Link href="/" className="text-2xl md:text-3xl text-blue-700 font-extrabold tracking-wide">
-            EduPlus
+            <Link href="/" className="text-2xl font-extrabold tracking-tight text-blue-700">
+                EduPlus
             </Link>
 
             {/* Liens desktop */}
-            <ul className="hidden md:flex items-center gap-4">
-                {linksNames.map((link) => {
-                const isActive = pathname === link.href
-                return (
-                    <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`text-base font-medium px-3 py-2 rounded-md transition-all duration-200
-                        ${isActive ? "text-blue-700 bg-blue-100" : "text-gray-700 hover:text-blue-700 hover:bg-blue-100"}`}
-                    >
-                    {link.name}
-                    </Link>
-                )
-                })}
-
+            <ul className="hidden items-center gap-1 md:flex">
+                {liens.map((lien) => (
+                    <li key={lien.href}>
+                        <Link href={lien.href} aria-current={pathname === lien.href ? "page" : undefined} className={styleLien(lien.href)}>
+                            {lien.nom}
+                        </Link>
+                    </li>
+                ))}
             </ul>
 
-            {/* Compte : profil + déconnexion, ou connexion + inscription */}
-            <div className="hidden md:flex items-center gap-3 min-w-40 justify-end">
-            {!chargement && utilisateur && (
-                <>
-                <Link className="text-blue-700 font-semibold hover:underline" href="/profil">
-                    {utilisateur.prenom}
-                </Link>
-                <button
-                    onClick={seDeconnecter}
-                    className="border border-blue-700 px-4 py-2 rounded-2xl text-blue-700 font-semibold hover:bg-blue-100 transition cursor-pointer"
-                >
-                    Déconnexion
-                </button>
-                </>
-            )}
-            {!chargement && !utilisateur && (
-                <>
-                <Link className="text-blue-700 font-semibold hover:underline" href="/connexion">
-                    Connexion
-                </Link>
-                <Link
-                    className="bg-blue-700 px-5 py-2 rounded-2xl text-white font-semibold hover:bg-blue-800 transition"
-                    href="/inscription"
-                >
-                    S'inscrire
-                </Link>
-                </>
-            )}
-            </div>
-
-            {/* Menu burger mobile */}
-            <button className="md:hidden" onClick={toggleMenu} aria-label="Ouvrir le menu">
-            <FiMenu className="text-3xl text-blue-700 cursor-pointer" />
-            </button>
-        </div>
-
-        {/* Menu Mobile */}
-        {showMenu && (
-            <div className="md:hidden mt-4">
-            <ul className="flex flex-col items-center gap-2">
-                {linksNames.map((link) => (
-                <Link
-                    onClick={toggleMenu}
-                    key={link.name}
-                    href={link.href}
-                    className="block text-gray-700 font-medium text-base px-4 py-2 w-full text-center hover:text-blue-700 hover:bg-blue-100 transition-all duration-200"
-                >
-                    {link.name}
-                </Link>
-                ))}
-                {utilisateur ? (
-                <>
-                    <Link
-                    onClick={toggleMenu}
-                    href="/profil"
-                    className="block text-blue-700 font-medium text-base px-4 py-2 w-full text-center hover:bg-blue-100 transition-all duration-200"
-                    >
-                    Mon profil ({utilisateur.prenom})
+            {/* Compte : dépôt + profil + déconnexion, ou connexion + inscription */}
+            <div className="hidden min-w-56 items-center justify-end gap-2 md:flex">
+                {!chargement && utilisateur && (
+                    <>
+                    <Link href="/depot" className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800">
+                        <FiUpload aria-hidden /> Déposer
+                    </Link>
+                    <Link href="/profil" className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700" aria-hidden>
+                            {initiale}
+                        </span>
+                        <span className="max-w-24 truncate">{utilisateur.prenom}</span>
                     </Link>
                     <button
-                    onClick={seDeconnecter}
-                    className="mt-3 border border-blue-700 text-blue-700 px-6 py-2 rounded-full hover:bg-blue-100 transition"
+                        onClick={seDeconnecter}
+                        aria-label="Se déconnecter"
+                        title="Se déconnecter"
+                        className="cursor-pointer rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
                     >
-                    Déconnexion
+                        <FiLogOut aria-hidden />
                     </button>
-                </>
-                ) : (
-                <>
-                    <Link
-                    onClick={toggleMenu}
-                    href="/connexion"
-                    className="block text-blue-700 font-medium text-base px-4 py-2 w-full text-center hover:bg-blue-100 transition-all duration-200"
-                    >
-                    Connexion
-                    </Link>
-                    <Link
-                    onClick={toggleMenu}
-                    href="/inscription"
-                    className="mt-3 bg-blue-700 text-white px-6 py-2 rounded-full hover:bg-blue-800 transition"
-                    >
-                    S'inscrire
-                    </Link>
-                </>
+                    </>
                 )}
-            </ul>
+                {!chargement && !utilisateur && (
+                    <>
+                    <Link href="/connexion" className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                        Connexion
+                    </Link>
+                    <Link href="/inscription" className="rounded-lg bg-blue-700 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800">
+                        S&apos;inscrire
+                    </Link>
+                    </>
+                )}
+            </div>
+
+            {/* Bouton du menu mobile */}
+            <button
+                className="cursor-pointer rounded-lg p-2 text-2xl text-slate-700 transition hover:bg-slate-100 md:hidden"
+                onClick={() => setMenuOuvert(!menuOuvert)}
+                aria-label={menuOuvert ? "Fermer le menu" : "Ouvrir le menu"}
+                aria-expanded={menuOuvert}
+                aria-controls="menu-mobile"
+            >
+                {menuOuvert ? <FiX aria-hidden /> : <FiMenu aria-hidden />}
+            </button>
+        </nav>
+
+        {/* Menu mobile */}
+        {menuOuvert && (
+            <div id="menu-mobile" className="border-t border-slate-200 bg-white px-4 pb-5 pt-3 md:hidden">
+                <ul className="flex flex-col gap-1">
+                    {liens.map((lien) => (
+                        <li key={lien.href}>
+                            <Link href={lien.href} aria-current={pathname === lien.href ? "page" : undefined} className={`block ${styleLien(lien.href)} text-base`}>
+                                {lien.nom}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+
+                <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4">
+                    {utilisateur ? (
+                        <>
+                        <Link href="/depot" className="flex items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 font-semibold text-white">
+                            <FiUpload aria-hidden /> Déposer un sujet
+                        </Link>
+                        <Link href="/profil" className="rounded-lg border border-slate-300 px-4 py-2.5 text-center font-semibold text-slate-700">
+                            Mon profil ({utilisateur.prenom})
+                        </Link>
+                        <button onClick={seDeconnecter} className="cursor-pointer rounded-lg px-4 py-2.5 font-semibold text-slate-600 hover:bg-slate-100">
+                            Se déconnecter
+                        </button>
+                        </>
+                    ) : (
+                        <>
+                        <Link href="/inscription" className="rounded-lg bg-blue-700 px-4 py-2.5 text-center font-semibold text-white">
+                            Créer un compte
+                        </Link>
+                        <Link href="/connexion" className="rounded-lg border border-slate-300 px-4 py-2.5 text-center font-semibold text-slate-700">
+                            Connexion
+                        </Link>
+                        </>
+                    )}
+                </div>
             </div>
         )}
-        </nav>
+        </header>
     )
 }

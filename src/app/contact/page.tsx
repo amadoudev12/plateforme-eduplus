@@ -1,50 +1,75 @@
+"use client"
+
+import { useState } from "react"
+import { FiMail } from "react-icons/fi"
+import { Alerte, Champ, styleBoutonPrincipal, styleCarte, styleChamp, styleLien, stylePage } from "../components/ui"
+import { EMAIL_CONTACT } from "../lib/api"
+
 export default function Contact() {
+    const [nom, setNom] = useState("")
+    const [message, setMessage] = useState("")
+    const [ouvert, setOuvert] = useState(false)
+
+    // Le site n'envoie pas d'email lui-même : on ouvre la messagerie de l'utilisateur avec le message déjà rédigé
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        const sujet = encodeURIComponent(`Message de ${nom} depuis EduPlus`)
+        const corps = encodeURIComponent(message)
+        window.location.href = `mailto:${EMAIL_CONTACT}?subject=${sujet}&body=${corps}`
+        setOuvert(true)
+    }
+
     return (
-        <div className=" mb-10.5 min-h-screen bg-gray-50 px-4 py-12 flex flex-col items-center">
-        <div className="max-w-2xl w-full bg-white shadow-md rounded-xl p-8">
-            <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">Contactez-nous</h1>
-            <p className="text-gray-600 text-center mb-8">
-            Une question ? Une suggestion ? Écrivez-nous, nous vous répondrons dans les plus brefs délais.
-            </p>
-
-            <form className="space-y-6">
-            <div>
-                <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-700">Nom complet</label>
-                <input
-                id="name"
-                type="text"
-                placeholder="Votre nom"
-                className="w-full border border-gray-300 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                />
+        <div className={stylePage}>
+        <div className="mx-auto max-w-xl">
+            <div className="text-center">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">Contacte-nous</h1>
+                <p className="mt-1 text-slate-600">Une question, une suggestion ou un sujet à signaler ? Écris-nous.</p>
             </div>
 
-            <div>
-                <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-700">Adresse email</label>
-                <input
-                id="email"
-                type="email"
-                placeholder="exemple@mail.com"
-                className="w-full border border-gray-300 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                />
-            </div>
+            <form onSubmit={handleSubmit} className={`${styleCarte} mt-8 space-y-5 p-6 sm:p-8`}>
+                <Champ label="Ton nom" pour="nom">
+                    <input
+                        id="nom"
+                        type="text"
+                        value={nom}
+                        onChange={(e) => setNom(e.target.value)}
+                        required
+                        autoComplete="name"
+                        className={styleChamp}
+                    />
+                </Champ>
+                <Champ label="Message" pour="message">
+                    <textarea
+                        id="message"
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        required
+                        rows={6}
+                        placeholder="Ton message..."
+                        className={styleChamp}
+                    />
+                </Champ>
 
-            <div>
-                <label htmlFor="message" className="block mb-2 text-sm font-medium text-gray-700">Message</label>
-                <textarea
-                id="message"
-                rows={5}
-                placeholder="Votre message ici..."
-                className="w-full border border-gray-300 px-4 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-                ></textarea>
-            </div>
+                {ouvert && (
+                    <Alerte type="succes">
+                        Ta messagerie s&apos;est ouverte avec le message prêt à envoyer. Si rien ne s&apos;est passé, écris
+                        directement à {EMAIL_CONTACT}.
+                    </Alerte>
+                )}
 
-            <button
-                type="submit"
-                className="w-full bg-blue-700 hover:bg-blue-800 text-white font-medium py-2 rounded-lg transition duration-300"
-            >
-                Envoyer le message
-            </button>
+                <button type="submit" className={`${styleBoutonPrincipal} w-full py-3`}>
+                    <FiMail aria-hidden /> Ouvrir ma messagerie
+                </button>
+                <p className="text-center text-sm text-slate-500">
+                    Le message sera envoyé depuis ta propre adresse email.
+                </p>
             </form>
+
+            <p className="mt-6 text-center text-slate-600">
+                Tu préfères écrire directement ?{" "}
+                <a href={`mailto:${EMAIL_CONTACT}`} className={styleLien}>{EMAIL_CONTACT}</a>
+            </p>
         </div>
         </div>
     )

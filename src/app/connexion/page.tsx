@@ -1,20 +1,26 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import ChampMotDePasse from "../components/champMotDePasse"
+import { Alerte, Champ, styleBoutonPrincipal, styleCarte, styleChamp, styleLien, stylePage } from "../components/ui"
 import { useUtilisateur } from "../components/utilisateurContext"
-import { envoyerJson } from "../lib/api"
-
-const styleChamp = "w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+import { envoyerJson, pageApresConnexion } from "../lib/api"
 
 export default function Connexion() {
     const [email, setEmail] = useState("")
     const [motDePasse, setMotDePasse] = useState("")
     const [erreur, setErreur] = useState("")
     const [envoiEnCours, setEnvoiEnCours] = useState(false)
+    // On transmet « ?suite= » à la page d'inscription pour ne pas perdre la page de retour
+    const [parametres, setParametres] = useState("")
     const { setUtilisateur } = useUtilisateur()
     const router = useRouter()
+
+    useEffect(() => {
+        setParametres(window.location.search)
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -24,7 +30,7 @@ export default function Connexion() {
         try {
             const donnees = await envoyerJson("/auth/connexion", { email, motDePasse })
             setUtilisateur(donnees.utilisateur)
-            router.push("/cours")
+            router.push(pageApresConnexion())
         } catch (e) {
             setErreur((e as Error).message)
             setEnvoiEnCours(false)
@@ -32,51 +38,48 @@ export default function Connexion() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 px-4 py-12">
-        <div className="max-w-md mx-auto p-6 bg-white rounded-xl shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-center text-blue-700">Connexion</h1>
-        <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-            <label htmlFor="email" className="block mb-1 font-medium">Adresse email</label>
-            <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="exemple@mail.com"
-                className={styleChamp}
-            />
-            </div>
-            <div>
-            <label htmlFor="motDePasse" className="block mb-1 font-medium">Mot de passe</label>
-            <input
-                id="motDePasse"
-                type="password"
-                value={motDePasse}
-                onChange={(e) => setMotDePasse(e.target.value)}
-                required
-                autoComplete="current-password"
-                className={styleChamp}
-            />
+        <div className={stylePage}>
+        <div className="mx-auto max-w-md">
+            <div className="text-center">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">Content de te revoir</h1>
+                <p className="mt-1 text-slate-600">Connecte-toi pour déposer et gérer tes sujets.</p>
             </div>
 
-            {erreur && <p className="text-center text-red-600 font-semibold">{erreur}</p>}
+            <form onSubmit={handleSubmit} className={`${styleCarte} mt-8 space-y-5 p-6 sm:p-8`}>
+                <Champ label="Adresse email" pour="email">
+                    <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        autoComplete="email"
+                        autoFocus
+                        placeholder="exemple@mail.com"
+                        className={styleChamp}
+                    />
+                </Champ>
+                <Champ label="Mot de passe" pour="motDePasse">
+                    <ChampMotDePasse
+                        id="motDePasse"
+                        value={motDePasse}
+                        onChange={(e) => setMotDePasse(e.target.value)}
+                        required
+                        autoComplete="current-password"
+                    />
+                </Champ>
 
-            <button
-            type="submit"
-            disabled={envoiEnCours}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 rounded-md transition duration-300 disabled:opacity-60 cursor-pointer"
-            >
-            {envoiEnCours ? "Connexion..." : "Se connecter"}
-            </button>
-        </form>
+                {erreur && <Alerte type="erreur">{erreur}</Alerte>}
 
-        <p className="mt-6 text-center text-gray-600">
-            Pas encore de compte ?{" "}
-            <Link href="/inscription" className="text-blue-700 font-semibold hover:underline">S'inscrire</Link>
-        </p>
+                <button type="submit" disabled={envoiEnCours} className={`${styleBoutonPrincipal} w-full py-3`}>
+                    {envoiEnCours ? "Connexion..." : "Se connecter"}
+                </button>
+            </form>
+
+            <p className="mt-6 text-center text-slate-600">
+                Pas encore de compte ?{" "}
+                <Link href={"/inscription" + parametres} className={styleLien}>Créer un compte</Link>
+            </p>
         </div>
         </div>
     )

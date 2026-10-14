@@ -1,64 +1,52 @@
-import Image from "next/image"
+import Link from "next/link"
+import { FiBookOpen, FiClock, FiUsers } from "react-icons/fi"
+import { styleBoutonPrincipal, styleBoutonSecondaire, styleCarte, stylePage } from "../components/ui"
+
+const raisons = [
+    {
+        icone: FiBookOpen,
+        titre: "Des sujets en accès gratuit",
+        texte: "Consulte et télécharge des partiels, examens et TD sans payer et sans créer de compte.",
+    },
+    {
+        icone: FiClock,
+        titre: "Des révisions à ton rythme",
+        texte: "Entraîne-toi sur les sujets des années passées quand tu veux, pour arriver préparé le jour de l'épreuve.",
+    },
+    {
+        icone: FiUsers,
+        titre: "L'entraide entre étudiants",
+        texte: "Chaque sujet est déposé par un étudiant. En partageant les tiens, tu aides ceux qui suivent.",
+    },
+]
 
 export default function About() {
     return (
-        <section className="bg-white px-4 py-12 md:px-[5%] w-full flex flex-col mb-10.5">
-        <h1 className="text-3xl md:text-4xl font-bold text-center text-[#0A0F1C] mb-10">
-            Pourquoi EduPlus ?
-        </h1>
-
-        <div className="flex flex-col gap-10 md:flex-row md:justify-between md:items-stretch">
-            {/* Carte 1 */}
-            <div className="flex flex-col items-center text-center bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <Image
-                src="https://img.icons8.com/ios-filled/100/open-book--v2.png"
-                alt="Livre ouvert"
-                width={64}
-                height={64}
-                className="w-16 h-16 mb-4"
-            />
-            <h2 className="text-lg md:text-xl font-semibold text-[#0A0F1C] mb-2">
-                Accès gratuit à des ressources de qualité
-            </h2>
-            <p className="text-gray-600 text-base">
-                Télécharge gratuitement des cours, fiches et exercices. Toutes les ressources sont vérifiées et organisées.
-            </p>
+        <div className={stylePage}>
+            <div className="mx-auto max-w-2xl text-center">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Pourquoi EduPlus ?</h1>
+                <p className="mt-3 text-lg text-slate-600">
+                    Les anciens sujets sont la meilleure façon de réviser, mais ils circulent mal.
+                    EduPlus les rassemble au même endroit, pour tout le monde.
+                </p>
             </div>
 
-            {/* Carte 2 */}
-            <div className="flex flex-col items-center text-center bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <Image
-                src="https://img.icons8.com/ios-filled/100/brain.png"
-                alt="Cerveau"
-                width={64}
-                height={64}
-                className="w-16 h-16 mb-4"
-            />
-            <h2 className="text-lg md:text-xl font-semibold text-[#0A0F1C] mb-2">
-                Apprentissage à son rythme
-            </h2>
-            <p className="text-gray-600 text-base">
-                Revois les notions à tout moment, selon ton emploi du temps et progresse sans pression.
-            </p>
-            </div>
+            <ul className="mt-12 grid gap-5 md:grid-cols-3">
+                {raisons.map((raison) => (
+                    <li key={raison.titre} className={`${styleCarte} p-6`}>
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-2xl text-blue-700">
+                            <raison.icone aria-hidden />
+                        </div>
+                        <h2 className="mt-4 text-lg font-semibold text-slate-900">{raison.titre}</h2>
+                        <p className="mt-1 text-slate-600">{raison.texte}</p>
+                    </li>
+                ))}
+            </ul>
 
-            {/* Carte 3 */}
-            <div className="flex flex-col items-center text-center bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <Image
-                src="https://img.icons8.com/ios-filled/100/conference-call.png"
-                alt="Partage"
-                width={64}
-                height={64}
-                className="w-16 h-16 mb-4"
-            />
-            <h2 className="text-lg md:text-xl font-semibold text-[#0A0F1C] mb-2">
-                Partage entre élèves et étudiants
-            </h2>
-            <p className="text-gray-600 text-base">
-                Dépose tes documents pour aider les autres et créer une vraie communauté d'entraide.
-            </p>
+            <div className="mt-12 flex flex-col justify-center gap-3 sm:flex-row">
+                <Link href="/cours" className={styleBoutonPrincipal}>Voir les sujets</Link>
+                <Link href="/depot" className={styleBoutonSecondaire}>Déposer un sujet</Link>
             </div>
         </div>
-        </section>
     )
 }

@@ -1,15 +1,22 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
+import { FiInbox, FiSearch, FiUpload, FiX } from "react-icons/fi"
 import CoursCard from "../../app/components/couscard"
-import { appelApi, SujetType, TYPES_SUJET } from "../lib/api"
+import { Alerte, CarteSquelette, EtatVide, styleBoutonPrincipal, styleBoutonSecondaire, styleCarte, styleChamp, stylePage } from "../components/ui"
+import { appelApi, majuscule, SujetType, TYPES_SUJET } from "../lib/api"
 
-const styleFiltre = "w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+const styleLibelle = "mb-1.5 block text-sm font-medium text-slate-700"
 
 export default function ListeDesSujets() {
     const [sujets, setSujets] = useState<SujetType[]>([])
     const [chargement, setChargement] = useState(true)
+    // Vrai tant qu'aucune réponse n'est arrivée : on affiche alors des silhouettes de cartes
+    const [premierChargement, setPremierChargement] = useState(true)
     const [erreur, setErreur] = useState("")
+    // Augmenter ce nombre relance la recherche (bouton « Réessayer »)
+    const [essai, setEssai] = useState(0)
 
     // Filtres de recherche
     const [recherche, setRecherche] = useState("")
@@ -18,7 +25,7 @@ export default function ListeDesSujets() {
     const [type, setType] = useState("")
     const [annee, setAnnee] = useState("")
 
-    const filtresActifs = recherche || matiere || niveau || type || annee
+    const filtresActifs = Boolean(recherche || matiere || niveau || type || annee)
 
     // Relancer la recherche à chaque changement de filtre
     useEffect(() => {
@@ -45,7 +52,9 @@ export default function ListeDesSujets() {
                     if (!annule) setErreur(e.message)
                 })
                 .finally(() => {
-                    if (!annule) setChargement(false)
+                    if (annule) return
+                    setChargement(false)
+                    setPremierChargement(false)
                 })
         }, 300)
 
@@ -53,7 +62,7 @@ export default function ListeDesSujets() {
             annule = true
             clearTimeout(attente)
         }
-    }, [recherche, matiere, niveau, type, annee])
+    }, [recherche, matiere, niveau, type, annee, essai])
 
     const effacerFiltres = () => {
         setRecherche("")
@@ -63,81 +72,148 @@ export default function ListeDesSujets() {
         setAnnee("")
     }
 
+    const nombre = sujets.length
+    const resume = nombre === 0 ? "Aucun sujet" : nombre === 1 ? "1 sujet trouvé" : `${nombre} sujets trouvés`
+
     return (
-        <div className="p-6 mb-12.5 min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold text-center mb-6">Tous les sujets disponibles</h1>
+        <div className={stylePage}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Tous les sujets</h1>
+                    <p className="mt-1 text-slate-600">Partiels, examens, TD et concours déposés par les étudiants.</p>
+                </div>
+                <Link href="/depot" className={`${styleBoutonPrincipal} self-start sm:self-auto`}>
+                    <FiUpload aria-hidden /> Déposer un sujet
+                </Link>
+            </div>
 
-        {/* Recherche et filtres */}
-        <div className="bg-white rounded-xl shadow-md p-4 mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <input
-            type="search"
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
-            placeholder="Rechercher un sujet..."
-            aria-label="Rechercher un sujet"
-            className={`${styleFiltre} sm:col-span-2 lg:col-span-1`}
-            />
-            <input
-            type="text"
-            value={matiere}
-            onChange={(e) => setMatiere(e.target.value)}
-            placeholder="Matière"
-            aria-label="Matière"
-            className={styleFiltre}
-            />
-            <input
-            type="text"
-            value={niveau}
-            onChange={(e) => setNiveau(e.target.value)}
-            placeholder="Niveau (Terminale, Licence 1...)"
-            aria-label="Niveau"
-            className={styleFiltre}
-            />
-            <select value={type} onChange={(e) => setType(e.target.value)} aria-label="Type de sujet" className={`${styleFiltre} capitalize`}>
-            <option value="">Tous les types</option>
-            {TYPES_SUJET.map((t) => (
-                <option key={t} value={t}>{t}</option>
-            ))}
-            </select>
-            <input
-            type="number"
-            value={annee}
-            onChange={(e) => setAnnee(e.target.value)}
-            placeholder="Année"
-            aria-label="Année"
-            className={styleFiltre}
-            />
-        </div>
+            {/* Recherche et filtres */}
+            <form role="search" onSubmit={(e) => e.preventDefault()} className={`${styleCarte} mt-8 p-4 sm:p-5`}>
+                <label htmlFor="recherche" className="sr-only">Rechercher un sujet</label>
+                <div className="relative">
+                    <FiSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden />
+                    <input
+                        id="recherche"
+                        type="search"
+                        value={recherche}
+                        onChange={(e) => setRecherche(e.target.value)}
+                        placeholder="Rechercher par titre ou description..."
+                        className={`${styleChamp} py-3 pl-10`}
+                    />
+                </div>
 
-        {erreur && <p className="text-center text-red-600 font-semibold mb-6">{erreur}</p>}
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                        <label htmlFor="filtre-matiere" className={styleLibelle}>Matière</label>
+                        <input
+                            id="filtre-matiere"
+                            type="text"
+                            value={matiere}
+                            onChange={(e) => setMatiere(e.target.value)}
+                            placeholder="Algèbre, Droit civil..."
+                            className={styleChamp}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="filtre-niveau" className={styleLibelle}>Niveau</label>
+                        <input
+                            id="filtre-niveau"
+                            type="text"
+                            value={niveau}
+                            onChange={(e) => setNiveau(e.target.value)}
+                            placeholder="Licence 1, Master 2..."
+                            className={styleChamp}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="filtre-type" className={styleLibelle}>Type</label>
+                        <select id="filtre-type" value={type} onChange={(e) => setType(e.target.value)} className={styleChamp}>
+                            <option value="">Tous les types</option>
+                            {TYPES_SUJET.map((t) => (
+                                <option key={t} value={t}>{majuscule(t)}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor="filtre-annee" className={styleLibelle}>Année</label>
+                        <input
+                            id="filtre-annee"
+                            type="number"
+                            inputMode="numeric"
+                            min={1990}
+                            max={new Date().getFullYear()}
+                            value={annee}
+                            onChange={(e) => setAnnee(e.target.value)}
+                            placeholder={String(new Date().getFullYear())}
+                            className={styleChamp}
+                        />
+                    </div>
+                </div>
+            </form>
 
-        {!erreur && (
-            <p className="text-sm text-gray-500 mb-4">
-            {chargement ? "Chargement des sujets..." : `${sujets.length} sujet(s) trouvé(s)`}
-            {filtresActifs && (
-                <button onClick={effacerFiltres} className="ml-3 text-blue-700 font-medium hover:underline cursor-pointer">
-                Effacer les filtres
-                </button>
-            )}
-            </p>
-        )}
+            {/* Nombre de résultats */}
+            <div className="mt-6 flex min-h-9 flex-wrap items-center justify-between gap-3">
+                <p aria-live="polite" className="text-sm text-slate-600">
+                    {erreur ? "" : chargement ? "Recherche en cours..." : resume}
+                </p>
+                {filtresActifs && (
+                    <button
+                        onClick={effacerFiltres}
+                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
+                    >
+                        <FiX aria-hidden /> Effacer les filtres
+                    </button>
+                )}
+            </div>
 
-        {/* Aucun résultat */}
-        {!chargement && !erreur && sujets.length === 0 && (
-            <p className="text-center text-gray-500 py-12">
-            {filtresActifs
-                ? "Aucun sujet ne correspond à ta recherche."
-                : "Aucun sujet n'a encore été déposé."}
-            </p>
-        )}
+            <div className="mt-4">
+                {erreur && (
+                    <div className="space-y-4">
+                        <Alerte type="erreur">{erreur}</Alerte>
+                        <button onClick={() => setEssai(essai + 1)} className={styleBoutonSecondaire}>
+                            Réessayer
+                        </button>
+                    </div>
+                )}
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {sujets.map((sujet) => (
-                <CoursCard key={sujet.id} sujet={sujet} />
-            ))}
-        </div>
-        </div>
+                {!erreur && premierChargement && (
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        {[1, 2, 3, 4, 5, 6].map((n) => (
+                            <CarteSquelette key={n} />
+                        ))}
+                    </div>
+                )}
+
+                {/* Aucun résultat */}
+                {!erreur && !chargement && nombre === 0 && (
+                    filtresActifs ? (
+                        <EtatVide
+                            icone={<FiSearch aria-hidden />}
+                            titre="Aucun sujet ne correspond"
+                            texte="Essaie avec moins de filtres ou un mot plus court : « algo » trouve aussi « Algorithmique »."
+                        >
+                            <button onClick={effacerFiltres} className={styleBoutonSecondaire}>Effacer les filtres</button>
+                        </EtatVide>
+                    ) : (
+                        <EtatVide
+                            icone={<FiInbox aria-hidden />}
+                            titre="Aucun sujet pour l'instant"
+                            texte="Sois la première personne à partager un sujet avec les autres étudiants."
+                        >
+                            <Link href="/depot" className={styleBoutonPrincipal}>Déposer un sujet</Link>
+                        </EtatVide>
+                    )
+                )}
+
+                {/* Pendant une nouvelle recherche, les anciens résultats restent visibles mais atténués */}
+                {!erreur && nombre > 0 && (
+                    <div className={`grid gap-5 transition-opacity sm:grid-cols-2 lg:grid-cols-3 ${chargement ? "opacity-50" : ""}`}>
+                        {sujets.map((sujet) => (
+                            <CoursCard key={sujet.id} sujet={sujet} />
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

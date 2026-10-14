@@ -1,12 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import ChampMotDePasse from "../components/champMotDePasse"
+import { Alerte, Champ, styleBoutonPrincipal, styleCarte, styleChamp, styleLien, stylePage } from "../components/ui"
 import { useUtilisateur } from "../components/utilisateurContext"
-import { envoyerJson } from "../lib/api"
+import { envoyerJson, pageApresConnexion } from "../lib/api"
 
-const styleChamp = "w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+const MOT_DE_PASSE_MIN = 8
 
 export default function Inscription() {
     const [prenom, setPrenom] = useState("")
@@ -18,8 +20,14 @@ export default function Inscription() {
 
     const [erreur, setErreur] = useState("")
     const [envoiEnCours, setEnvoiEnCours] = useState(false)
+    // On transmet « ?suite= » à la page de connexion pour ne pas perdre la page de retour
+    const [parametres, setParametres] = useState("")
     const { setUtilisateur } = useUtilisateur()
     const router = useRouter()
+
+    useEffect(() => {
+        setParametres(window.location.search)
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -37,111 +45,116 @@ export default function Inscription() {
             })
             // Le backend connecte directement le nouvel utilisateur
             setUtilisateur(donnees.utilisateur)
-            router.push("/cours")
+            router.push(pageApresConnexion())
         } catch (e) {
             setErreur((e as Error).message)
             setEnvoiEnCours(false)
         }
     }
 
+    const caracteresManquants = MOT_DE_PASSE_MIN - motDePasse.length
+
     return (
-        <div className="min-h-screen bg-gray-50 px-4 py-12">
-        <div className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-center text-blue-700">Créer un compte</h1>
-        <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid gap-5 sm:grid-cols-2">
-            <div>
-                <label htmlFor="prenom" className="block mb-1 font-medium">Prénom</label>
-                <input
-                id="prenom"
-                type="text"
-                value={prenom}
-                onChange={(e) => setPrenom(e.target.value)}
-                required
-                autoComplete="given-name"
-                className={styleChamp}
-                />
-            </div>
-            <div>
-                <label htmlFor="nom" className="block mb-1 font-medium">Nom</label>
-                <input
-                id="nom"
-                type="text"
-                value={nom}
-                onChange={(e) => setNom(e.target.value)}
-                required
-                autoComplete="family-name"
-                className={styleChamp}
-                />
-            </div>
-            </div>
-            <div>
-            <label htmlFor="email" className="block mb-1 font-medium">Adresse email</label>
-            <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="exemple@mail.com"
-                className={styleChamp}
-            />
-            </div>
-            <div>
-            <label htmlFor="motDePasse" className="block mb-1 font-medium">Mot de passe (8 caractères minimum)</label>
-            <input
-                id="motDePasse"
-                type="password"
-                value={motDePasse}
-                onChange={(e) => setMotDePasse(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-                className={styleChamp}
-            />
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2">
-            <div>
-                <label htmlFor="niveau" className="block mb-1 font-medium">Classe ou niveau (facultatif)</label>
-                <input
-                id="niveau"
-                type="text"
-                value={niveau}
-                onChange={(e) => setNiveau(e.target.value)}
-                maxLength={60}
-                placeholder="Terminale, Licence 1, etc."
-                className={styleChamp}
-                />
-            </div>
-            <div>
-                <label htmlFor="etablissement" className="block mb-1 font-medium">Établissement (facultatif)</label>
-                <input
-                id="etablissement"
-                type="text"
-                value={etablissement}
-                onChange={(e) => setEtablissement(e.target.value)}
-                maxLength={100}
-                className={styleChamp}
-                />
-            </div>
+        <div className={stylePage}>
+        <div className="mx-auto max-w-xl">
+            <div className="text-center">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900">Créer un compte</h1>
+                <p className="mt-1 text-slate-600">Gratuit, et prêt en moins d&apos;une minute.</p>
             </div>
 
-            {erreur && <p className="text-center text-red-600 font-semibold">{erreur}</p>}
+            <form onSubmit={handleSubmit} className={`${styleCarte} mt-8 space-y-5 p-6 sm:p-8`}>
+                <div className="grid gap-5 sm:grid-cols-2">
+                    <Champ label="Prénom" pour="prenom">
+                        <input
+                            id="prenom"
+                            type="text"
+                            value={prenom}
+                            onChange={(e) => setPrenom(e.target.value)}
+                            required
+                            autoComplete="given-name"
+                            autoFocus
+                            className={styleChamp}
+                        />
+                    </Champ>
+                    <Champ label="Nom" pour="nom">
+                        <input
+                            id="nom"
+                            type="text"
+                            value={nom}
+                            onChange={(e) => setNom(e.target.value)}
+                            required
+                            autoComplete="family-name"
+                            className={styleChamp}
+                        />
+                    </Champ>
+                </div>
+                <Champ label="Adresse email" pour="email">
+                    <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        autoComplete="email"
+                        placeholder="exemple@mail.com"
+                        className={styleChamp}
+                    />
+                </Champ>
+                <Champ
+                    label="Mot de passe"
+                    pour="motDePasse"
+                    aide={
+                        motDePasse.length > 0 && caracteresManquants > 0
+                            ? `Encore ${caracteresManquants} caractère${caracteresManquants > 1 ? "s" : ""}.`
+                            : `${MOT_DE_PASSE_MIN} caractères minimum.`
+                    }
+                >
+                    <ChampMotDePasse
+                        id="motDePasse"
+                        value={motDePasse}
+                        onChange={(e) => setMotDePasse(e.target.value)}
+                        required
+                        minLength={MOT_DE_PASSE_MIN}
+                        autoComplete="new-password"
+                    />
+                </Champ>
+                <div className="grid gap-5 sm:grid-cols-2">
+                    <Champ label="Niveau d'études" pour="niveau" facultatif>
+                        <input
+                            id="niveau"
+                            type="text"
+                            value={niveau}
+                            onChange={(e) => setNiveau(e.target.value)}
+                            maxLength={60}
+                            placeholder="Licence 1, Master 2..."
+                            className={styleChamp}
+                        />
+                    </Champ>
+                    <Champ label="Établissement" pour="etablissement" facultatif>
+                        <input
+                            id="etablissement"
+                            type="text"
+                            value={etablissement}
+                            onChange={(e) => setEtablissement(e.target.value)}
+                            maxLength={100}
+                            autoComplete="organization"
+                            placeholder="Nom de ton université"
+                            className={styleChamp}
+                        />
+                    </Champ>
+                </div>
 
-            <button
-            type="submit"
-            disabled={envoiEnCours}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 rounded-md transition duration-300 disabled:opacity-60 cursor-pointer"
-            >
-            {envoiEnCours ? "Inscription..." : "S'inscrire"}
-            </button>
-        </form>
+                {erreur && <Alerte type="erreur">{erreur}</Alerte>}
 
-        <p className="mt-6 text-center text-gray-600">
-            Déjà un compte ?{" "}
-            <Link href="/connexion" className="text-blue-700 font-semibold hover:underline">Se connecter</Link>
-        </p>
+                <button type="submit" disabled={envoiEnCours} className={`${styleBoutonPrincipal} w-full py-3`}>
+                    {envoiEnCours ? "Création du compte..." : "Créer mon compte"}
+                </button>
+            </form>
+
+            <p className="mt-6 text-center text-slate-600">
+                Déjà un compte ?{" "}
+                <Link href={"/connexion" + parametres} className={styleLien}>Se connecter</Link>
+            </p>
         </div>
         </div>
     )
